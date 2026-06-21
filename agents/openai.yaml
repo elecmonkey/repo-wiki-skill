@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repo Wiki"
+  short_description: "Generate deep repository wiki docs"
+  default_prompt: "Use $repo-wiki to read this repository and produce a detailed Markdown wiki for new maintainers."
