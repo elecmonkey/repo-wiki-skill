@@ -1,6 +1,6 @@
 ---
 name: repo-wiki-skill
-description: Build a multi-page Markdown wiki directory for a large software repository after reading and analyzing the whole codebase. Use when Codex is asked to create repository wiki documentation, onboarding docs, architecture guides, codebase tours, maintainer handbooks, or deep explanations of modules, core code paths, algorithms, design decisions, tradeoffs, tests, tooling, and operations for code learners or new maintainers. Optimized for large repositories with hundreds of thousands of lines of code where maintainers need broad coverage and deep subsystem documentation. Supports Markdown output with Mermaid, Graphviz, and KaTeX where useful.
+description: Build a multi-page Markdown wiki directory for a large software repository after reading and analyzing the whole codebase. Use when Codex is asked to create repository wiki documentation, onboarding docs, architecture guides, codebase tours, maintainer handbooks, or deep explanations of modules, core code paths, algorithms, design decisions, tradeoffs, tests, tooling, and operations for code learners or new maintainers. Optimized for large repositories with hundreds of thousands of lines of code where maintainers need broad coverage and deep subsystem documentation. Also supports optional Rspress/static documentation site setup when the user explicitly asks to publish or deploy the generated wiki. Supports Markdown output with Mermaid, Graphviz, and KaTeX where useful.
 ---
 
 # Repo Wiki
@@ -19,6 +19,7 @@ Create a large, accurate, multi-page Markdown wiki directory for a substantial r
 - Ground claims in concrete file paths, symbols, config names, scripts, tests, and observed behavior.
 - Mark uncertainty explicitly when evidence is incomplete.
 - Use Mermaid, Graphviz, and KaTeX only when they clarify architecture, data flow, state machines, dependency graphs, or algorithms.
+- Treat documentation-site deployment as optional. If the user asks to publish the wiki as an Rspress/docs site, read `references/rspress_docs_site.md`; otherwise do not include site setup in the main workflow.
 
 ## Standard Workflow
 
@@ -110,9 +111,9 @@ Do not produce a short overview. This skill is for large codebases where maintai
 
 | Profile | Typical trigger | Minimum target |
 | --- | --- | --- |
-| Large | substantial application/library, tens of thousands of LOC | 30+ Markdown files, 250,000+ words, 15,000+ non-blank lines, 1,200+ headings, 1,800+ file references |
-| Huge | hundreds of thousands of LOC, monorepo/platform/framework | 80+ Markdown files, 600,000+ words, 35,000+ non-blank lines, 2,600+ headings, 4,500+ file references |
-| Massive | very large monorepo or multi-product system | 150+ Markdown files, 1,200,000+ words, 70,000+ non-blank lines, 5,200+ headings, 9,000+ file references |
+| Large | substantial application/library, tens of thousands of LOC | 30+ Markdown files, 250,000+ words, 15,000+ non-blank lines, 1,200+ headings, 1,800+ unique backticked file references |
+| Huge | hundreds of thousands of LOC, monorepo/platform/framework | 80+ Markdown files, 600,000+ words, 35,000+ non-blank lines, 2,600+ headings, 4,500+ unique backticked file references |
+| Massive | very large monorepo or multi-product system | 150+ Markdown files, 1,200,000+ words, 70,000+ non-blank lines, 5,200+ headings, 9,000+ unique backticked file references |
 
 For an unknown repository, default to the **huge** target. For every substantial top-level directory, create or include a dedicated section/page. For every complex module or core subsystem, prefer a subdirectory with multiple focused pages over one overlong page. Include key files/symbols, how it works, tests, failure modes, and maintainer notes. Prefer adding missing pages and evidence-backed explanations over padding generic prose.
 
@@ -136,7 +137,7 @@ Run the Node quality gate on the wiki directory and expand the wiki if it fails:
 node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --profile huge
 ```
 
-Use `--profile large` only for smaller repositories, and `--profile massive` for very large monorepos or multi-product systems. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, file references, fenced code blocks, and tables.
+Use `--profile large` only for smaller repositories, and `--profile massive` for very large monorepos or multi-product systems. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, and tables.
 
 ## Diagrams and Math
 
@@ -195,3 +196,4 @@ A strong repo wiki directory:
 - Use `scripts/repo_snapshot.js` with Node to produce a repository inventory, language/config summary, and candidate reading plan.
 - Use `scripts/wiki_quality_check.js` with Node to verify that a generated wiki directory is not too small or under-structured.
 - Read `references/wiki_structure.md` when drafting or reviewing the final wiki directory outline.
+- Read `references/rspress_docs_site.md` only when the user explicitly asks to turn the wiki into an Rspress or static documentation site.
