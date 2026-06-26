@@ -22,12 +22,12 @@ The primary skill output remains a multi-page Markdown wiki directory, usually `
 ## Required setup behavior
 
 1. Tell the user that this is an optional publishing step separate from writing the wiki.
-2. Install or activate the Rspress-related Codex Skills before doing detailed Rspress work when such Skills are available. The user does not need to ask separately for a second product-level decision; the request to publish/deploy the wiki as an Rspress site is enough intent to add these local agent guidance skills, while still following the current environment's sandbox, network, and approval rules.
+2. Install or activate the Rspress-related skills before doing detailed Rspress work when such skills are available. The user does not need to ask separately for a second product-level decision; the request to publish/deploy the wiki as an Rspress site is enough intent to add these local agent guidance skills, while still following the current environment's sandbox, network, and approval rules.
    - Prefer installing from `rstackjs/agent-skills` with the `skills` CLI.
    - Install `rspress-best-practices` for Rspress project structure, config, MDX, navigation, deployment, and debugging guidance.
    - Install `rspress-description-generator` when creating or polishing many documentation pages, because Rspress uses descriptions for SEO/search/AI-readable outputs.
    - Install `rspress-custom-theme` only when the user asks for theme customization or the chosen template/site already has a custom theme.
-   - Use the available skill discovery/installation workflow, such as `find-skills` or `skill-installer` when present in the current Codex environment. If running commands directly is appropriate, examples are:
+   - Use the available skill discovery/installation workflow, such as `find-skills` or `skill-installer` when present in the current agent environment. If running commands directly is appropriate, examples are:
 
      ```bash
      npx skills add rstackjs/agent-skills --skill rspress-best-practices

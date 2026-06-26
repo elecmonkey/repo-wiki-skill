@@ -1,6 +1,6 @@
 # repo-wiki-skill
 
-A Codex Skill for generating a large, multi-page Markdown wiki directory from a large repository.
+A skill for generating a large, multi-page Markdown wiki directory from a large repository.
 
 It is designed for codebases with hundreds of thousands of lines of code, where maintainers need a navigable wiki instead of one long document.
 
