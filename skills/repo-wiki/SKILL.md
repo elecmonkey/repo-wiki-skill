@@ -18,7 +18,7 @@ Create a large, accurate, multi-page Markdown wiki directory for a substantial r
 - Be exhaustive in coverage but selective in depth: explain important, surprising, or risky code paths deeply; summarize boilerplate and generated code briefly.
 - Ground claims in concrete file paths, symbols, config names, scripts, tests, and observed behavior.
 - Mark uncertainty explicitly when evidence is incomplete.
-- Use Mermaid, Graphviz, and KaTeX only when they clarify architecture, data flow, state machines, dependency graphs, or algorithms.
+- Use Mermaid and KaTeX when they clarify architecture, data flow, state machines, dependency graphs, or algorithms. Prefer Mermaid for diagrams in plain wiki output. Use Graphviz (DOT) only when the user explicitly requests a documentation site, since it requires a build-time plugin to render.
 - Treat numeric size targets as a floor, not the goal. Passing the quality checker is necessary but never sufficient; do not write repetitive, template-heavy, file-index-dominated, or count-driven prose.
 - Do not bulk-generate a wiki from file names alone. Use scripts for inventory and quality checks, but write architecture, subsystem, algorithm, and maintainer guidance from actual source reading and design reasoning.
 - Scripts may scaffold navigation and inventories, but they must not author the core explanatory prose. Manually synthesize the architecture pages from source evidence before producing broad generated support pages.
@@ -184,7 +184,7 @@ flowchart TD
 
 ### Graphviz
 
-Use Graphviz DOT when graph layout or clustered dependency visualization is clearer than Mermaid:
+Use Graphviz DOT only when the user has requested a documentation site (Rspress), since it requires `rspress-plugin-viz` to render. Prefer Mermaid for plain Markdown wiki output. Graphviz is useful when clustered subgraph layout or complex dependency visualization is clearer than Mermaid:
 
 ```markdown
 ```dot

@@ -159,6 +159,34 @@ export default defineConfig({
 
 Only add `outDir`, theme config, logo, custom search, plugins, or custom routing when the user asks or the repository already uses them.
 
+### 4.1. Configure diagram and math plugins
+
+The wiki uses Mermaid and KaTeX by default. If the user explicitly requests a documentation site, Graphviz (DOT) diagrams are also available. Install only the plugins the wiki actually uses.
+
+| Feature | Package | Import |
+| --- | --- | --- |
+| Mermaid (` ```mermaid `) | `rspress-plugin-mermaid` | `import mermaid from 'rspress-plugin-mermaid'` |
+| KaTeX (`$...$`, `$$...$$`) | `rspress-plugin-katex` | `import katex from 'rspress-plugin-katex'` |
+| Graphviz (` ```dot `, docs site only) | `rspress-plugin-viz` | `import viz from 'rspress-plugin-viz'` |
+
+Install needed packages and add them to `rspress.config.ts` plugins array:
+
+```ts
+import { defineConfig } from '@rspress/core';
+import mermaid from 'rspress-plugin-mermaid';
+import katex from 'rspress-plugin-katex';
+import viz from 'rspress-plugin-viz';
+
+export default defineConfig({
+  root: 'docs',
+  title: '<Repository Name> Wiki',
+  plugins: [mermaid(), katex(), viz()],
+  llms: true,
+});
+```
+
+Only include the plugins actually used in the wiki. Omit `viz` unless the wiki contains ` ```dot ` blocks.
+
 ### 5. Add `tsconfig.json` when needed
 
 If the repository does not already have a compatible TypeScript config for the docs site, add the minimal Rspress-oriented config from the official manual setup and include `docs`, `theme`, and `rspress.config.ts`. If the repository already has TypeScript configuration, extend it in the repository's style instead of overwriting it.
