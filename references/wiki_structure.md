@@ -45,6 +45,30 @@ docs/wiki/
 
 ## Page Guidance
 
+## Design-First Organization Rules
+
+The wiki should read like a maintainer's map of the system, not like a generated catalog. Build the directory around the repository's actual design centers before adding broad indexes.
+
+- Start with 5-15 named conceptual areas that explain how the system works: runtime paths, data models, dependency graph, task graph, compilation pipeline, request lifecycle, cache, persistence, scheduler, plugin interface, security boundary, or release pipeline.
+- For each conceptual area, write a page or subdirectory that includes purpose, source evidence, control/data flow, design tradeoffs, invariants, failure modes, test strategy, and safe modification points.
+- Use file lists only to support navigation. A table of files is not a subsystem explanation.
+- Avoid repeated page skeletons where only file paths change. If two pages have the same prose shape, merge them or rewrite them around distinct responsibilities.
+- Prefer fewer high-signal deep dives over hundreds of shallow generated pages. Add breadth after the core explanations are useful.
+- Treat reviewer feedback that the wiki is superficial, template-driven, index-heavy, or missing architectural reasoning as a quality failure even if the metric checker passes.
+- Use generated scripts for inventories and link scaffolding, not for core explanation. The architecture, subsystem, algorithm, failure-mode, and maintainer pages must be synthesized from source reading.
+
+Every qualified deep-dive page should cover at least most of these signals with concrete source evidence:
+
+| Signal | What to explain |
+| --- | --- |
+| Design and responsibility | What the component owns, what it deliberately does not own, and where its boundary sits. |
+| Control/data flow | How inputs move through functions, types, processes, tasks, or services. |
+| Tradeoffs and decisions | Why this shape appears useful, what alternatives the code seems to avoid, and where coupling is accepted. |
+| Invariants and contracts | Assumptions that callers, configs, storage, cache keys, task graphs, or protocols must preserve. |
+| Failure modes | Errors, retries, edge cases, partial state, cleanup, race conditions, and debugging entry points. |
+| Testing evidence | Tests, fixtures, snapshots, examples, CI jobs, and gaps that matter to maintainers. |
+| Maintainer guidance | Safe edit points, risky files, common change recipes, and review checklist. |
+
 ### `index.md`
 
 - State the audience: code learners, new maintainers, and maintainers under pressure from a large codebase.
@@ -63,10 +87,13 @@ docs/wiki/
 - Explain system boundaries, major components, dependency direction, and integration points.
 - Include Mermaid or Graphviz diagrams where helpful.
 - Trace primary runtime flows such as CLI invocation, HTTP request, background job, compiler pipeline, plugin lifecycle, or data sync.
+- Include a design narrative: why the major components exist, what alternatives the code seems to avoid, and where coupling or risk concentrates.
 
 ### `modules/`
 
 Create one page for a simple package, crate, app, service, library, or major directory only when it is small enough to explain clearly in one document. For any non-trivial module, create a subdirectory with multiple pages. A complex module should usually have `index.md`, architecture, key flows, important files/symbols, testing, and maintainer notes. Merge tiny modules only when they share one responsibility.
+
+For very large monorepos, do not create one low-value page per package just to increase file count. Group minor packages by role and reserve subdirectories for modules with real API surface, difficult behavior, frequent changes, or operational risk.
 
 ### `subsystems/`
 
@@ -83,6 +110,8 @@ Include common change recipes, safe edit points, risky areas, troubleshooting, d
 ### `reference/`
 
 Include glossary, file index, symbol index, and open questions. The file and symbol indexes should be practical navigation aids, not raw dumps.
+
+Keep generated index shards under half of the wiki's Markdown files unless the user explicitly asks for a full file catalog. If an index becomes large, write stronger conceptual pages instead of more shards.
 
 ## Per-Module Page Template
 
@@ -173,6 +202,18 @@ node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --profile huge
 
 If the checker fails, add missing pages and expand repository areas with evidence-backed explanations. Do not add filler just to satisfy counts.
 
+Passing the checker is not enough. After the checker passes, read the wiki like a new maintainer and ask:
+
+- Can I explain the core architecture without opening the source tree?
+- Can I trace the most important runtime path end to end?
+- Can I name the highest-risk files and why they are risky?
+- Can I make a common change and know where tests should be added?
+- Are repeated paragraphs, generic "maintenance perspective" sections, or generated file shards carrying the page count?
+
+If any answer is no, revise the structure and content before finalizing.
+
+The checker also qualifies deep-dive pages. A candidate page named like `architecture`, `design`, `runtime`, `algorithm`, `failure-modes`, `testing`, `maintainer-notes`, or under `subsystems/` is counted only when it is long enough, references enough concrete files, and contains multiple design-quality signals. Rename or rewrite weak candidates instead of padding them.
+
 ## Evidence Standards
 
 Prefer citations as inline file references rather than formal footnotes:
@@ -182,6 +223,20 @@ Prefer citations as inline file references rather than formal footnotes:
 - Quote short snippets only when the exact code matters; otherwise paraphrase.
 - If inferring intent, write "The code suggests..." or "This appears designed to...".
 - If evidence conflicts, describe both sources and the likely resolution.
+
+## Anti-Patterns
+
+Avoid these failure modes:
+
+- Generating hundreds of pages from directory names, package manifests, or file lists without reading core implementation files.
+- Writing repeated sections such as "maintenance perspective 1/2/3" that could apply to any repository.
+- Adding "automatically generated" disclaimers or generic caution text across many pages.
+- Hiding uncertainty behind repeated "needs maintainer confirmation" sentences instead of explaining what source evidence proves and what remains unknown.
+- Claiming depth because the word count is high while most words are generic advice, repeated tables, or file index shards.
+- Letting `reference/file-index-*` or similar generated catalogs dominate the wiki.
+- Using diagrams that only connect file names in a chain instead of explaining real dependency or control flow.
+- Treating "needs maintainer confirmation" as a substitute for source analysis on core behavior.
+- Ending after the metric checker passes when conceptual pages are still weak.
 
 ## Diagram Selection
 

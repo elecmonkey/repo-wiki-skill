@@ -19,6 +19,9 @@ Create a large, accurate, multi-page Markdown wiki directory for a substantial r
 - Ground claims in concrete file paths, symbols, config names, scripts, tests, and observed behavior.
 - Mark uncertainty explicitly when evidence is incomplete.
 - Use Mermaid, Graphviz, and KaTeX only when they clarify architecture, data flow, state machines, dependency graphs, or algorithms.
+- Treat numeric size targets as a floor, not the goal. Passing the quality checker is necessary but never sufficient; do not write repetitive, template-heavy, file-index-dominated, or count-driven prose.
+- Do not bulk-generate a wiki from file names alone. Use scripts for inventory and quality checks, but write architecture, subsystem, algorithm, and maintainer guidance from actual source reading and design reasoning.
+- Scripts may scaffold navigation and inventories, but they must not author the core explanatory prose. Manually synthesize the architecture pages from source evidence before producing broad generated support pages.
 - Treat documentation-site deployment as optional. If the user asks to publish the wiki as an Rspress/docs site, read `references/rspress_docs_site.md`; otherwise do not include site setup in the main workflow.
 
 ## Standard Workflow
@@ -66,6 +69,10 @@ Before writing pages, create a short plan for the wiki directory:
 
 Adapt this structure to the repository, but keep the output multi-page and navigable.
 
+Before bulk writing, identify the repository's actual design centers: the primary runtime path, the core data model, boundary interfaces, configuration model, persistence/cache/network layers, extension points, and tests that define behavior. Turn those into named architecture or subsystem pages first. File indexes and module catalogs come later and must not dominate the wiki.
+
+Create and keep a short `analysis-plan.md` or equivalent scratch outline while working. It should list the design centers, the source files already read for each one, the main hypotheses, and which wiki pages will explain them. Delete or omit this scratch file from the final wiki unless the user wants process notes.
+
 ### 4. Read Deeply by Importance
 
 Prioritize detailed reading in this order:
@@ -87,9 +94,22 @@ For each important subsystem, identify:
 - Tests or missing tests.
 - Maintenance hazards and safe modification points.
 
+For each deep-dive page, read enough implementation and tests to support all of these design-quality signals: design/architecture, control or data flow, tradeoffs or decisions, invariants or contracts, failure modes, testing evidence, and maintainer risks. If you cannot support most signals from source, downgrade the page to medium coverage instead of padding it.
+
 ### 5. Write the Wiki Directory
 
 Use the outline in `references/wiki_structure.md` as the default directory framework. Adapt file names and headings to the repository instead of forcing irrelevant sections.
+
+Write the first pass in this order:
+
+1. `index.md`, `repository-map.md`, architecture overview, and maintainer playbook.
+2. End-to-end runtime flows and the 5-15 hardest subsystems.
+3. Complex module directories with separate design, flow, testing, and maintainer pages.
+4. Supporting module pages, development pages, glossary, and indexes.
+
+Do not start by generating hundreds of near-identical file pages. A file index is allowed only as a navigation aid after the conceptual pages are useful.
+
+Do not label pages as generated, do not include repeated numbered maintenance sections, and do not use generic phrases like "needs maintainer confirmation" as a substitute for analysis. Use bounded open questions only after explaining what the code does prove.
 
 The wiki directory should normally include:
 
@@ -130,6 +150,8 @@ Before finalizing, check:
 - Diagrams match the written explanation.
 - Mermaid/Graphviz/KaTeX blocks are syntactically plausible.
 - The wiki distinguishes facts from inferences.
+- Core conceptual pages are not replaceable by tables or file lists; they explain design, data/control flow, tradeoffs, invariants, failure modes, tests, and safe modification points.
+- Repeated boilerplate, numbered generic sections, or copied paragraphs do not count as depth. Rewrite them into repository-specific analysis or remove them.
 
 Run the Node quality gate on the wiki directory and expand the wiki if it fails:
 
@@ -137,7 +159,11 @@ Run the Node quality gate on the wiki directory and expand the wiki if it fails:
 node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --profile huge
 ```
 
-Use `--profile large` only for smaller repositories, and `--profile massive` for very large monorepos or multi-product systems. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, and tables.
+Use `--profile large` only for smaller repositories, and `--profile massive` for very large monorepos or multi-product systems. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, tables, deep-dive page count, repetition limits, banned padding phrases, and index-page dominance limits.
+
+A page only counts as a qualified deep dive when it has enough words, file references, and distinct design-quality signals. This is intentional: a page named `architecture.md` with generic prose should fail the gate.
+
+If the checker passes but a human or follow-up review says the wiki feels superficial, treat that as a real failure. Stop optimizing counts, re-read the core source paths, redesign the wiki around architecture and maintainership, and replace the weak pages rather than defending the metrics.
 
 ## Diagrams and Math
 
@@ -189,6 +215,7 @@ A strong repo wiki directory:
 - Includes enough file/symbol references to support navigation.
 - Meets or exceeds the applicable minimum size and structure target without filler.
 - Avoids dumping raw file trees without interpretation.
+- Avoids using generated file indexes, repeated maintenance advice, or generic page templates as a substitute for design analysis.
 - Avoids hallucinated architecture: if unsure, say what evidence suggests and what remains unknown.
 
 ## Using Bundled Resources
