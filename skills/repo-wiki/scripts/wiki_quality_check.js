@@ -254,13 +254,18 @@ function stripCodeBlocks(markdown) {
   return markdown.replace(/```[\s\S]*?```/g, " ");
 }
 
-function countWords(markdown) {
+function countWordBreakdown(markdown) {
   const text = stripCodeBlocks(markdown)
     .replace(/`[^`]*`/g, " ")
     .replace(/https?:\/\/\S+/g, " ");
-  const cjk = text.match(/[\u3400-\u9fff]/g) || [];
-  const words = text.match(/[A-Za-z0-9_]+(?:[-'][A-Za-z0-9_]+)*/g) || [];
-  return words.length + cjk.length;
+  const cjk = (text.match(/[\u3400-\u9fff]/g) || []).length;
+  const latin = (text.match(/[A-Za-z0-9_]+(?:[-'][A-Za-z0-9_]+)*/g) || []).length;
+  return { cjk, latin };
+}
+
+function countWords(markdown) {
+  const { cjk, latin } = countWordBreakdown(markdown);
+  return cjk + latin;
 }
 
 function countTables(lines) {
@@ -339,6 +344,8 @@ function analyze(files, targetRoot, thresholds) {
   const totals = {
     markdownFiles: files.length,
     words: 0,
+    cjkWords: 0,
+    latinWords: 0,
     nonBlankLines: 0,
     headings: 0,
     h2: 0,
@@ -359,10 +366,13 @@ function analyze(files, targetRoot, thresholds) {
     const markdown = fs.readFileSync(file, "utf8");
     const lines = markdown.split(/\r?\n/);
     const relative = path.relative(targetRoot, file).split(path.sep).join("/");
-    const pageWords = countWords(markdown);
+    const pageBreakdown = countWordBreakdown(markdown);
+    const pageWords = pageBreakdown.cjk + pageBreakdown.latin;
     const pageFileRefs = collectFileRefs(markdown);
 
     totals.words += pageWords;
+    totals.cjkWords += pageBreakdown.cjk;
+    totals.latinWords += pageBreakdown.latin;
     totals.nonBlankLines += lines.filter((line) => line.trim()).length;
     totals.headings += lines.filter((line) => /^#{1,6}\s+\S/.test(line)).length;
     totals.h2 += lines.filter((line) => /^##\s+\S/.test(line)).length;
@@ -400,6 +410,7 @@ function analyze(files, targetRoot, thresholds) {
   return {
     ...totals,
     fileRefs: totals.fileRefs.size,
+    cjkRatio: totals.words === 0 ? 0 : totals.cjkWords / totals.words,
     indexPageRatio: totals.markdownFiles === 0 ? 0 : totals.indexPages / totals.markdownFiles,
     repeatedLineRatio: repeatedRatio(repeatedLines),
     repeatedParagraphRatio: repeatedRatio(repeatedParagraphs),
@@ -430,6 +441,18 @@ function formatValue(value) {
   return typeof value === "number" && value > 0 && value < 1 ? value.toFixed(3) : String(value);
 }
 
+// Word-count thresholds are calibrated for English prose, where one token is
+// roughly one word. The script counts each CJK character as one word, but a
+// Han character is a dense morpheme and technical Chinese is terse, so the same
+// content needs fewer "words". Soften volume thresholds toward a floor of 0.5
+// (pure CJK counts as roughly half an English target). Structure, reference,
+// and anti-padding thresholds are language-independent and are never softened.
+const CJK_DENSITY_FLOOR = 0.5;
+
+function cjkDensityFactor(cjkRatio) {
+  return 1 - (1 - CJK_DENSITY_FLOOR) * cjkRatio;
+}
+
 function main() {
   const args = parseArgs(process.argv);
   const target = path.resolve(args.target);
@@ -438,10 +461,17 @@ function main() {
   const thresholds = { ...baseThresholds, ...args.overrides };
   const targetRoot = fs.statSync(target).isDirectory() ? target : path.dirname(target);
   const metrics = analyze(files, targetRoot, thresholds);
+
+  // Apply the CJK density factor to volume thresholds only, and only when the
+  // caller did not pin the threshold explicitly via an override.
+  const densityFactor = cjkDensityFactor(metrics.cjkRatio);
+  const minWords = "minWords" in args.overrides ? thresholds.minWords : Math.round(thresholds.minWords * densityFactor);
+  const minNonBlankLines = "minNonBlankLines" in args.overrides ? thresholds.minNonBlankLines : Math.round(thresholds.minNonBlankLines * densityFactor);
+
   const minimumChecks = [
     ["markdownFiles", metrics.markdownFiles, thresholds.minMarkdownFiles],
-    ["words", metrics.words, thresholds.minWords],
-    ["nonBlankLines", metrics.nonBlankLines, thresholds.minNonBlankLines],
+    ["words", metrics.words, minWords],
+    ["nonBlankLines", metrics.nonBlankLines, minNonBlankLines],
     ["headings", metrics.headings, thresholds.minHeadings],
     ["h2", metrics.h2, thresholds.minH2],
     ["fileRefs", metrics.fileRefs, thresholds.minFileRefs],
@@ -462,6 +492,9 @@ function main() {
   console.log(`Markdown files scanned: ${files.length}`);
   console.log(`Deep-dive candidates found: ${metrics.deepDiveCandidatePages}`);
   console.log(`Deep-dive qualification: each counted page needs >= ${thresholds.minDeepDivePageWords} words, >= ${thresholds.minDeepDiveFileRefsPerPage} file refs, and >= ${thresholds.minDeepDiveSignalsPerPage} distinct design-quality signals.`);
+  if (metrics.cjkRatio > 0.05) {
+    console.log(`CJK content detected: ${(metrics.cjkRatio * 100).toFixed(1)}% of words. Word/line targets softened by factor ${densityFactor.toFixed(3)} (CJK is more information-dense per word).`);
+  }
   console.log("");
   console.log("| Metric | Actual | Required | Status |");
   console.log("| --- | ---: | ---: | --- |");
@@ -480,7 +513,7 @@ function main() {
 
   console.log("");
   if (!ok) {
-    console.error("Wiki is likely too small, under-structured, or too template/index-driven for a large codebase. Add evidence-backed deep dives, reduce repetition, and improve design-oriented coverage before finalizing.");
+    console.error("Wiki is likely too small, under-structured, or too template/index-driven for a large codebase. Add evidence-backed deep dives, reduce repetition, and improve design-oriented coverage before finalizing. Note: for CJK wikis, a word-count FAIL with clean anti-padding metrics and real design depth can be acceptable; never pad to hit the number.");
     process.exit(1);
   }
   console.log("Wiki passes minimum size, structure, and anti-padding checks. Human review for design quality is still required.");

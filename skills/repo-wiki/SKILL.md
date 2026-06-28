@@ -137,6 +137,8 @@ node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
 
 The formula scales words (~4× LOC), files (~1 per 2000 LOC), file references (~7% of LOC), and deep-dive pages proportionally. Anti-padding checks remain fixed.
 
+**Language note (CJK / non-English wikis):** The word-count and non-blank-line targets are calibrated for English prose, where roughly one token equals one word. Chinese, Japanese, and Korean writing is far more information-dense per character, so the same architecture explained well in Chinese produces a much lower word count. The checker auto-detects the CJK ratio and softens the word/line targets accordingly (a pure-CJK wiki gets roughly half the English word target); structure, file-reference, deep-dive, and anti-padding thresholds are language-independent and are never softened. Even after softening, a CJK wiki may still FAIL the word count — that is acceptable when the anti-padding gates are clean and the design depth is real. Never pad to hit a word number; that trades quality for a metric the skill explicitly forbids.
+
 **Profile mode (reference baselines for very large projects):**
 
 | Profile | Typical trigger | Minimum target |

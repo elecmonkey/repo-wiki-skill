@@ -194,6 +194,8 @@ node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
 
 This computes thresholds dynamically (words ~4× LOC, files ~1 per 2000 LOC, file references ~7% of LOC, etc.), avoiding over-sizing wiki for smaller projects or under-sizing for large ones.
 
+The word and non-blank-line targets are calibrated for English prose. For CJK (Chinese/Japanese/Korean) wikis, the checker auto-detects the CJK ratio and softens these two targets (down to roughly half for a pure-CJK wiki), because Han characters are far more information-dense per word. Structure, file-reference, deep-dive, and anti-padding thresholds are language-independent and stay fixed. A CJK wiki may still FAIL the word count even after softening — that is acceptable when anti-padding metrics are clean and design depth is real. Do not pad prose to hit the word number.
+
 For reference, the fixed profile baselines for very large projects are:
 
 | Profile | Use for | Minimums |
