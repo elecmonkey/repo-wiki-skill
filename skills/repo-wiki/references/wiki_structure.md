@@ -186,19 +186,21 @@ Classify repository areas by depth:
 
 ## Minimum Size Rubric
 
-Use these deliberately high targets across the whole wiki directory to avoid producing documentation too shallow for large-codebase maintainers:
+The quality checker is an advisory tool. Prefer `--loc` mode for proportional expectations based on project size:
+
+```bash
+node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
+```
+
+This computes thresholds dynamically (words ~4× LOC, files ~1 per 2000 LOC, file references ~7% of LOC, etc.), avoiding over-sizing wiki for smaller projects or under-sizing for large ones.
+
+For reference, the fixed profile baselines for very large projects are:
 
 | Profile | Use for | Minimums |
 | --- | --- | --- |
 | `large` | Substantial repos, tens of thousands of LOC | 30+ Markdown files, 250,000+ words, 15,000+ non-blank lines, 1,200+ headings, 400+ H2 sections, 1,800+ unique backticked file references, 80+ code/diagram fences, 120+ tables |
 | `huge` | Hundreds of thousands of LOC, monorepos, platforms, frameworks | 80+ Markdown files, 600,000+ words, 35,000+ non-blank lines, 2,600+ headings, 900+ H2 sections, 4,500+ unique backticked file references, 200+ code/diagram fences, 300+ tables |
 | `massive` | Very large monorepos or multi-product systems | 150+ Markdown files, 1,200,000+ words, 70,000+ non-blank lines, 5,200+ headings, 1,800+ H2 sections, 9,000+ unique backticked file references, 400+ code/diagram fences, 600+ tables |
-
-Run the quality gate on the wiki directory:
-
-```bash
-node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --profile huge
-```
 
 If the checker fails, add missing pages and expand repository areas with evidence-backed explanations. Do not add filler just to satisfy counts.
 

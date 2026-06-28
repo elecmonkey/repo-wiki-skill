@@ -127,7 +127,17 @@ The wiki directory should normally include:
 
 ### Minimum Size and Structure Targets
 
-Do not produce a short overview. This skill is for large codebases where maintainers need serious documentation. Use these deliberately high empirical minimums across the **entire wiki directory**; they are meant to force breadth and depth rather than a polished summary:
+Do not produce a short overview. This skill is for codebases where maintainers need serious documentation. The quality checker supports two modes:
+
+**Dynamic mode (recommended):** Pass the project's lines of code with `--loc` and let the script compute proportional thresholds. This avoids over- or under-sizing the wiki relative to the project:
+
+```bash
+node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
+```
+
+The formula scales words (~4× LOC), files (~1 per 2000 LOC), file references (~7% of LOC), and deep-dive pages proportionally. Anti-padding checks remain fixed.
+
+**Profile mode (reference baselines for very large projects):**
 
 | Profile | Typical trigger | Minimum target |
 | --- | --- | --- |
@@ -135,7 +145,9 @@ Do not produce a short overview. This skill is for large codebases where maintai
 | Huge | hundreds of thousands of LOC, monorepo/platform/framework | 80+ Markdown files, 600,000+ words, 35,000+ non-blank lines, 2,600+ headings, 4,500+ unique backticked file references |
 | Massive | very large monorepo or multi-product system | 150+ Markdown files, 1,200,000+ words, 70,000+ non-blank lines, 5,200+ headings, 9,000+ unique backticked file references |
 
-For an unknown repository, default to the **huge** target. For every substantial top-level directory, create or include a dedicated section/page. For every complex module or core subsystem, prefer a subdirectory with multiple focused pages over one overlong page. Include key files/symbols, how it works, tests, failure modes, and maintainer notes. Prefer adding missing pages and evidence-backed explanations over padding generic prose.
+These profiles are reference baselines for very large projects. For most repositories, prefer `--loc` mode to get proportional expectations. The checker is an advisory tool, not a hard gate — the real quality standard is design depth, architectural clarity, and usefulness to maintainers.
+
+For an unknown repository, estimate LOC with a quick count (e.g. `find src -name '*.rs' | xargs wc -l`) and use `--loc`. For every substantial top-level directory, create or include a dedicated section/page. For every complex module or core subsystem, prefer a subdirectory with multiple focused pages over one overlong page. Include key files/symbols, how it works, tests, failure modes, and maintainer notes. Prefer adding missing pages and evidence-backed explanations over padding generic prose.
 
 ### 6. Verify Coverage and Accuracy
 
@@ -156,10 +168,10 @@ Before finalizing, check:
 Run the Node quality gate on the wiki directory and expand the wiki if it fails:
 
 ```bash
-node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --profile huge
+node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
 ```
 
-Use `--profile large` only for smaller repositories, and `--profile massive` for very large monorepos or multi-product systems. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, tables, deep-dive page count, repetition limits, banned padding phrases, and index-page dominance limits.
+Use `--profile large|huge|massive` only as reference baselines for very large projects. Prefer `--loc` for proportional expectations. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, tables, deep-dive page count, repetition limits, banned padding phrases, and index-page dominance limits.
 
 A page only counts as a qualified deep dive when it has enough words, file references, and distinct design-quality signals. This is intentional: a page named `architecture.md` with generic prose should fail the gate.
 

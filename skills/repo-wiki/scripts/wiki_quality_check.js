@@ -133,11 +133,42 @@ const DEEP_DIVE_SIGNAL_PATTERNS = {
 };
 
 function usage() {
-  console.log(`Usage: node scripts/wiki_quality_check.js <wiki_dir_or_md> [options]\n\nOptions:\n  --profile <large|huge|massive>     Threshold profile, default huge\n  --min-files <number>               Override minimum Markdown file count\n  --min-words <number>               Override minimum word count\n  --min-lines <number>               Override minimum non-blank line count\n  --min-headings <number>            Override minimum heading count\n  --min-h2 <number>                  Override minimum H2 count\n  --min-file-refs <number>           Override minimum backticked path references\n  --min-code-fences <number>         Override minimum fenced code block count\n  --min-tables <number>              Override minimum Markdown table count\n  --min-deep-dive-pages <number>     Override minimum qualified deep-dive page count\n  --min-deep-dive-page-words <number> Override words required for each qualified deep-dive page\n  --min-deep-dive-file-refs <number> Override file references required for each qualified deep-dive page\n  --min-deep-dive-signals <number>   Override distinct design-quality signals required per deep-dive page\n  --max-index-page-ratio <number>    Override maximum index/catalog page ratio, 0-1\n  --max-repeated-line-ratio <number> Override maximum repeated non-trivial line ratio, 0-1\n  --max-repeated-paragraph-ratio <number> Override maximum repeated paragraph ratio, 0-1\n  --max-banned-phrase-hits <number>  Override maximum known padding phrase hits\n  --max-generic-phrase-hits <number> Override maximum generic caution/padding phrase hits\n  -h, --help                         Show this help`);
+  console.log(`Usage: node scripts/wiki_quality_check.js <wiki_dir_or_md> [options]\n\nOptions:\n  --profile <large|huge|massive>     Threshold profile (ignored when --loc is set)\n  --loc <number>                     Project lines of code; computes thresholds dynamically\n  --min-files <number>               Override minimum Markdown file count\n  --min-words <number>               Override minimum word count\n  --min-lines <number>               Override minimum non-blank line count\n  --min-headings <number>            Override minimum heading count\n  --min-h2 <number>                  Override minimum H2 count\n  --min-file-refs <number>           Override minimum backticked path references\n  --min-code-fences <number>         Override minimum fenced code block count\n  --min-tables <number>              Override minimum Markdown table count\n  --min-deep-dive-pages <number>     Override minimum qualified deep-dive page count\n  --min-deep-dive-page-words <number> Override words required for each qualified deep-dive page\n  --min-deep-dive-file-refs <number> Override file references required for each qualified deep-dive page\n  --min-deep-dive-signals <number>   Override distinct design-quality signals required per deep-dive page\n  --max-index-page-ratio <number>    Override maximum index/catalog page ratio, 0-1\n  --max-repeated-line-ratio <number> Override maximum repeated non-trivial line ratio, 0-1\n  --max-repeated-paragraph-ratio <number> Override maximum repeated paragraph ratio, 0-1\n  --max-banned-phrase-hits <number>  Override maximum known padding phrase hits\n  --max-generic-phrase-hits <number> Override maximum generic caution/padding phrase hits\n  -h, --help                         Show this help`);
+}
+
+function computeFromLoc(loc) {
+  const minMarkdownFiles = Math.max(10, Math.round(loc / 2000));
+  const minWords = Math.round(loc * 4);
+  const minNonBlankLines = Math.round(minWords * 0.06);
+  const minHeadings = Math.round(minWords / 200);
+  const minH2 = Math.round(minHeadings / 3);
+  const minFileRefs = Math.round(loc * 0.07);
+  const minCodeFences = Math.max(20, Math.round(minMarkdownFiles * 2));
+  const minTables = Math.max(15, Math.round(minMarkdownFiles * 3));
+  const minDeepDivePages = Math.max(5, Math.round(minMarkdownFiles * 0.3));
+  return {
+    minMarkdownFiles,
+    minWords,
+    minNonBlankLines,
+    minHeadings,
+    minH2,
+    minFileRefs,
+    minCodeFences,
+    minTables,
+    minDeepDivePages,
+    minDeepDivePageWords: 800,
+    minDeepDiveFileRefsPerPage: 6,
+    minDeepDiveSignalsPerPage: 4,
+    maxIndexPageRatio: 0.45,
+    maxRepeatedLineRatio: 0.18,
+    maxRepeatedParagraphRatio: 0.12,
+    maxBannedPhraseHits: 0,
+    maxGenericPhraseHits: Math.max(10, Math.round(loc / 2000)),
+  };
 }
 
 function parseArgs(argv) {
-  const args = { target: null, profile: "huge", overrides: {} };
+  const args = { target: null, profile: "huge", loc: null, overrides: {} };
   const positional = [];
   for (let i = 2; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -146,6 +177,8 @@ function parseArgs(argv) {
       process.exit(0);
     } else if (arg === "--profile") {
       args.profile = argv[++i];
+    } else if (arg === "--loc") {
+      args.loc = Number(argv[++i]);
     } else if (arg === "--min-files") {
       args.overrides.minMarkdownFiles = Number(argv[++i]);
     } else if (arg === "--min-words") {
@@ -186,7 +219,8 @@ function parseArgs(argv) {
   }
   args.target = positional[0] || null;
   if (!args.target) throw new Error("Missing wiki directory or Markdown file path");
-  if (!PROFILES[args.profile]) throw new Error(`Unknown profile: ${args.profile}`);
+  if (!args.loc && !PROFILES[args.profile]) throw new Error(`Unknown profile: ${args.profile}`);
+  if (args.loc !== null && (!Number.isFinite(args.loc) || args.loc <= 0)) throw new Error("--loc must be a positive number");
   for (const [key, value] of Object.entries(args.overrides)) {
     if (!Number.isFinite(value) || value < 0) throw new Error(`${key} must be a non-negative number`);
     if (key.startsWith("max") && key.endsWith("Ratio") && value > 1) throw new Error(`${key} must be between 0 and 1`);
@@ -400,7 +434,8 @@ function main() {
   const args = parseArgs(process.argv);
   const target = path.resolve(args.target);
   const files = collectMarkdownFiles(target);
-  const thresholds = { ...PROFILES[args.profile], ...args.overrides };
+  const baseThresholds = args.loc ? computeFromLoc(args.loc) : PROFILES[args.profile];
+  const thresholds = { ...baseThresholds, ...args.overrides };
   const targetRoot = fs.statSync(target).isDirectory() ? target : path.dirname(target);
   const metrics = analyze(files, targetRoot, thresholds);
   const minimumChecks = [
@@ -423,7 +458,7 @@ function main() {
   ];
 
   console.log(`# Wiki quality check: ${target}`);
-  console.log(`Profile: ${args.profile}`);
+  console.log(args.loc ? `Estimated from LOC: ${args.loc}` : `Profile: ${args.profile}`);
   console.log(`Markdown files scanned: ${files.length}`);
   console.log(`Deep-dive candidates found: ${metrics.deepDiveCandidatePages}`);
   console.log(`Deep-dive qualification: each counted page needs >= ${thresholds.minDeepDivePageWords} words, >= ${thresholds.minDeepDiveFileRefsPerPage} file refs, and >= ${thresholds.minDeepDiveSignalsPerPage} distinct design-quality signals.`);
