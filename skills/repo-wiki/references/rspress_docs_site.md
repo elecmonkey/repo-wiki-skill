@@ -250,9 +250,37 @@ Use the package manager and script names actually present in the repository. `rs
 
 ### 9. Deployment notes
 
-If the user asks for deployment, add a short deployment page or README section covering the selected host. Keep host-specific instructions separate from the core wiki. Common targets include GitHub Pages, Vercel, Netlify, and internal static hosting.
+If the user asks for deployment, add a short deployment page or README section covering the selected host. Keep host-specific instructions separate from the core wiki. Common targets include Cloudflare Pages, GitHub Pages, Vercel, Netlify, and internal static hosting.
 
 Do not add CI deployment without explicit user approval. CI changes can publish content, require secrets, or affect repository policy.
+
+### 9.1. Deploy to Cloudflare Pages
+
+Install `wrangler` as a dev dependency in the same package where `@rspress/core` lives:
+
+```bash
+pnpm add wrangler -D
+```
+
+Build the site and deploy the output directory to Cloudflare Pages:
+
+```bash
+pnpm docs:build
+npx wrangler pages deploy doc_build --project-name <project-name>
+```
+
+On first run, `wrangler` will prompt for Cloudflare login if not already authenticated. The project is created automatically if it does not exist. The production site will be available at `<project-name>.pages.dev`.
+
+To set a custom branch name or suppress dirty-commit warnings in scripts:
+
+```bash
+npx wrangler pages deploy doc_build --project-name <project-name> --branch main --commit-dirty=true
+```
+
+Notes:
+- `doc_build` is the default Rspress output directory. If `outDir` is customized in `rspress.config.ts`, use that path instead.
+- No `wrangler.toml` is needed for static-only Pages deployments.
+- For CI/CD, set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` environment variables instead of interactive login.
 
 ## Quality rules
 
