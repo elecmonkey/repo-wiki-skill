@@ -70,6 +70,16 @@ Prefer a layout that wraps the wiki instead of flattening it:
 
 If the repository already has a docs app or website package, adapt to that existing app instead of creating another top-level site.
 
+### Dependency placement strategy
+
+Decide where to install `@rspress/core` and related dependencies based on the repository structure:
+
+1. **Root has `package.json` and is NOT a workspace root** (no `workspaces` field, no `pnpm-workspace.yaml`, `rush.json`, `nx.json`, `turbo.json`, or `lerna.json`) → install `@rspress/core` at the root, place `rspress.config.ts` at the root.
+2. **Root has `package.json` and IS a workspace root** → create a `docs/package.json` (or reuse an existing docs package) as a workspace member, install `@rspress/core` there, place `rspress.config.ts` inside `docs/`.
+3. **Root has no `package.json`** → create `docs/package.json` as a self-contained package, install `@rspress/core` there, place `rspress.config.ts` inside `docs/`.
+
+The goal is to avoid polluting the project root when it is not already an npm package, and to keep all docs-site changes scoped to the docs directory whenever the root is a workspace. If an existing docs sub-package already exists, always prefer it over creating a new one.
+
 ## Implementation checklist
 
 ### 1. Confirm publishing scope
@@ -83,7 +93,7 @@ Confirm or infer:
 
 ### 2. Install Rspress
 
-Use Node tooling. Prefer the repository package manager and correct workspace/package:
+Follow the dependency placement strategy above to determine the correct package. Use Node tooling with the repository's package manager:
 
 ```bash
 pnpm add @rspress/core -D
