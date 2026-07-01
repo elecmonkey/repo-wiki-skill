@@ -293,6 +293,6 @@ Notes:
 - After site setup, rerun the wiki quality gate and the docs build:
 
 ```bash
-node <skill_dir>/scripts/wiki_quality_check.js docs/wiki --profile huge
+node <skill_dir>/scripts/wiki_quality_check.cjs docs/wiki --profile huge
 pnpm docs:build
 ```

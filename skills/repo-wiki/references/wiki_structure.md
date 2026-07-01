@@ -189,7 +189,7 @@ Classify repository areas by depth:
 The quality checker is an advisory tool. Prefer `--loc` mode for proportional expectations based on project size:
 
 ```bash
-node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
+node <skill_dir>/scripts/wiki_quality_check.cjs <wiki_dir> --loc <project_loc>
 ```
 
 This computes thresholds dynamically (words ~4× LOC, files ~1 per 2000 LOC, file references ~7% of LOC, etc.), avoiding over-sizing wiki for smaller projects or under-sizing for large ones.
@@ -261,5 +261,5 @@ Avoid these failure modes:
 - Tests and tooling are documented with exact commands.
 - Maintainer playbook includes concrete change recipes.
 - Unknowns are explicit and bounded.
-- The directory passes the applicable `wiki_quality_check.js` profile.
+- The directory passes the applicable `wiki_quality_check.cjs` profile.
 - The output is valid Markdown with fenced diagram/math blocks.

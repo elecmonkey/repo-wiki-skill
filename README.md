@@ -21,6 +21,6 @@ By default, the Skill should create `docs/wiki/` with linked Markdown pages.
 ## Helper scripts
 
 ```bash
-node scripts/repo_snapshot.js <repo_root> --output /tmp/repo-snapshot.md
-node scripts/wiki_quality_check.js <wiki_dir> --profile huge
+node scripts/repo_snapshot.cjs <repo_root> --output /tmp/repo-snapshot.md
+node scripts/wiki_quality_check.cjs <wiki_dir> --profile huge
 ```

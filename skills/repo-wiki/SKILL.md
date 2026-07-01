@@ -38,12 +38,12 @@ If not specified, produce a multi-page wiki directory aimed at repository learne
 
 ### 2. Create a Repository Map
 
-Use fast local inspection before detailed reading. Prefer `rg --files`, `find`, and language-native metadata commands. Run `scripts/repo_snapshot.js` with Node when useful to generate a structured inventory without loading every file into context.
+Use fast local inspection before detailed reading. Prefer `rg --files`, `find`, and language-native metadata commands. Run `scripts/repo_snapshot.cjs` with Node when useful to generate a structured inventory without loading every file into context.
 
 Recommended first pass:
 
 ```bash
-node <skill_dir>/scripts/repo_snapshot.js <repo_root> --output /tmp/repo-snapshot.md
+node <skill_dir>/scripts/repo_snapshot.cjs <repo_root> --output /tmp/repo-snapshot.md
 ```
 
 Inspect at least:
@@ -132,7 +132,7 @@ Do not produce a short overview. This skill is for codebases where maintainers n
 **Dynamic mode (recommended):** Pass the project's lines of code with `--loc` and let the script compute proportional thresholds. This avoids over- or under-sizing the wiki relative to the project:
 
 ```bash
-node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
+node <skill_dir>/scripts/wiki_quality_check.cjs <wiki_dir> --loc <project_loc>
 ```
 
 The formula scales words (~4× LOC), files (~1 per 2000 LOC), file references (~7% of LOC), and deep-dive pages proportionally. Anti-padding checks remain fixed.
@@ -170,7 +170,7 @@ Before finalizing, check:
 Run the Node quality gate on the wiki directory and expand the wiki if it fails:
 
 ```bash
-node <skill_dir>/scripts/wiki_quality_check.js <wiki_dir> --loc <project_loc>
+node <skill_dir>/scripts/wiki_quality_check.cjs <wiki_dir> --loc <project_loc>
 ```
 
 Use `--profile large|huge|massive` only as reference baselines for very large projects. Prefer `--loc` for proportional expectations. The checker enforces minimum Markdown file count, word count, non-blank lines, headings, H2 sections, unique backticked file references, fenced code blocks, tables, deep-dive page count, repetition limits, banned padding phrases, and index-page dominance limits.
@@ -234,7 +234,7 @@ A strong repo wiki directory:
 
 ## Using Bundled Resources
 
-- Use `scripts/repo_snapshot.js` with Node to produce a repository inventory, language/config summary, and candidate reading plan.
-- Use `scripts/wiki_quality_check.js` with Node to verify that a generated wiki directory is not too small or under-structured.
+- Use `scripts/repo_snapshot.cjs` with Node to produce a repository inventory, language/config summary, and candidate reading plan.
+- Use `scripts/wiki_quality_check.cjs` with Node to verify that a generated wiki directory is not too small or under-structured.
 - Read `references/wiki_structure.md` when drafting or reviewing the final wiki directory outline.
 - Read `references/rspress_docs_site.md` only when the user explicitly asks to turn the wiki into an Rspress or static documentation site.
